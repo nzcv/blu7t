@@ -9,7 +9,7 @@ on:
     tags:
       - dev*
       - private*
-    #branches: [ main ]
+    branches: [ master ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -48,8 +48,9 @@ jobs:
       - name: Kernel Build
         run: |
           export PATH=$GITHUB_WORKSPACE/clang-aosp/bin:$PATH
+          which clang && clang --version
           cd $GITHUB_WORKSPACE/kernel && make -j$(nproc --all) CC=clang O=out ARCH=arm64 SUBARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld CROSS_COMPILE=$GITHUB_WORKSPACE/arm-gnu/bin/aarch64-none-linux-gnu- blu_spark_defconfig
-          cd $GITHUB_WORKSPACE/kernel && make -j$(nproc --all) CC=clang ARCH=arm64 SUBARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld CROSS_COMPILE=$GITHUB_WORKSPACE/arm-gnu/bin/aarch64-none-linux-gnu-
+          cd $GITHUB_WORKSPACE/kernel/out && make -j$(nproc --all) CC=clang ARCH=arm64 SUBARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld CROSS_COMPILE=$GITHUB_WORKSPACE/arm-gnu/bin/aarch64-none-linux-gnu-
       
       - name: Upload Github Assets
         uses: softprops/action-gh-release@v1
