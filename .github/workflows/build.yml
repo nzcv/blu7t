@@ -41,7 +41,7 @@ jobs:
           mkdir clang-aosp && tar xf linux-x86-refs_heads_master-kernel-build-2022-clang-r450784e.tar.gz -C clang-aosp
 
           curl -s -L -O https://github.com/yhnu/op7t/releases/download/v1.0/arm-gnu-toolchain-12.3.rel1-x86_64-aarch64-none-linux-gnu.tar.xz
-          mkdir arm-gnu && tar xf linux-x86-refs_heads_master-kernel-build-2022-clang-r450784e.tar.gz -C arm-gnu
+          tar xf linux-x86-refs_heads_master-kernel-build-2022-clang-r450784e.tar.gz && mv arm-gnu-toolchain-12.3.rel1-x86_64-aarch64-none-linux-gnu arm-gnu
                     
           curl -s -L -O https://github.com/casey/just/releases/download/0.10.1/just-0.10.1-x86_64-unknown-linux-musl.tar.gz
           tar -xf just-0.10.1-x86_64-unknown-linux-musl.tar.gz -C /usr/local/bin      
