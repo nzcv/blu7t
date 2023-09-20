@@ -1,0 +1,61 @@
+# This is a basic workflow to help you get started with Actions
+
+name: tag build
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    tags:
+      - dev*
+      - private*
+    #branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-20.04
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      - name: Build Verison
+        id: build_version
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: |
+          echo "$GITHUB_CONTEXT"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install git-core gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 libncurses5 libncurses5-dev lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig dos2unix libssl-dev abootimg zstd
+
+          curl -s -L -O https://github.com/yhnu/op7t/releases/download/v1.0/linux-x86-refs_heads_master-kernel-build-2022-clang-r450784e.tar.gz
+          mkdir clang-aosp && tar xf linux-x86-refs_heads_master-kernel-build-2022-clang-r450784e.tar.gz -C clang-aosp
+
+          curl -s -L -O https://github.com/yhnu/op7t/releases/download/v1.0/arm-gnu-toolchain-12.3.rel1-x86_64-aarch64-none-linux-gnu.tar.xz
+          mkdir arm-gnu && tar xf linux-x86-refs_heads_master-kernel-build-2022-clang-r450784e.tar.gz -C arm-gnu
+                    
+          curl -s -L -O https://github.com/casey/just/releases/download/0.10.1/just-0.10.1-x86_64-unknown-linux-musl.tar.gz
+          tar -xf just-0.10.1-x86_64-unknown-linux-musl.tar.gz -C /usr/local/bin      
+      - name: Kernel Build
+        run: |
+          export PATH=$GITHUB_WORKSPACE/clang-aosp/bin:$PATH
+          cd $GITHUB_WORKSPACE/kernel && make -j$(nproc --all) CC=clang O=out ARCH=arm64 SUBARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld CROSS_COMPILE=$GITHUB_WORKSPACE/arm-gnu/bin/aarch64-none-linux-gnu- blu_spark_defconfig
+          cd $GITHUB_WORKSPACE/kernel && make -j$(nproc --all) CC=clang ARCH=arm64 SUBARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld CROSS_COMPILE=$GITHUB_WORKSPACE/arm-gnu/bin/aarch64-none-linux-gnu-
+      
+      - name: Upload Github Assets
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            $GITHUB_WORKSPACE/kernel/out/arch/arm64/boot/Image.gz
+          prerelease: ${{ contains(github.ref, '-') }}
